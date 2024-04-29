@@ -1,16 +1,16 @@
-### **Shamiir secret sharing.**
+### **Shamir Secret Sharing**
 
-Wiki source with example calculation: [https://en.wikipedia.org/wiki/Shamir's_secret_sharing](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing)
+Wiki source with example calculation: [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing)
 
-**The key is in polynomes.**
+**The key is in polynomials.**
 
 - 2 points to identify a line
-- 3 points to identify a squared polynome
-- 4 points to identigy a cubic polynome
+- 3 points to identify a squared polynomial
+- 4 points to identify a cubic polynomial
 
 **Intuition:**
 
-We need to choose a large enough polynome. With n^2 we need 3 points. Then we can sample x points, eg 7 from the polynome. Now any 3 of these people can decrypt the secret.
+We need to choose a large enough polynomial. With n^2, we need 3 points. Then we can sample x points, e.g., 7 from the polynomial. Now any 3 of these people can decrypt the secret.
 
 $(x_0, y_0), … (x_n, y_n)$ → secret box = P
 
@@ -44,12 +44,13 @@ party i → uses Lagrange interpolation to reconstruct f(x).
 
 party i → read s from f(0)
 
----
-
 ## Lagrange Interpolation Algorithm
 
+---
 
 ### Example 1
+
+---
 
 **Points**= [(-1,0)(0,1),(1,8)]
 
@@ -84,12 +85,12 @@ $$
 
 **Notes:**
 
-- The shares will change, but the evalutation point will not. Ie y’s change, but xs do not.
-- xs only change if we add additional parties at which point we need to recompute the lagrange interpolation.
-
----
+- The shares will change, but the evaluation point will not. I.e., y’s change, but x's do not.
+- xs only change if we add additional parties at which point we need to recompute the Lagrange interpolation.
 
 ### Formal Algorithm
+
+---
 
 **Algorithm**:
 
@@ -97,7 +98,7 @@ $$
 f(x) = \sum_{j=0}^k{\delta_j(x)*y_j} \rarr \delta_0(x)y_0+ \delta_1(x)y_1+\delta_2(x)y_2
 $$
 
-**Note**: Once we have computed the lagrange reconstuction once. We can reuse it for all $y_j’s$
+**Note**: Once we have computed the Lagrange reconstruction once. We can reuse it for all $y_j’s$
 
 $$
 \delta_j(x)=\frac{(x-x_0)*(x-x_1)...(x-x_{j-1})*(x-x_{j+1})...(x-x_k)}
@@ -138,13 +139,13 @@ $$
 \delta_2(x_0)=0, \space \delta_2(x_1)=0, \space \delta_2(x_2)=1
 $$
 
-**Intuition**: At $\delta_j(x_j)$ both top and bottom are the same.. Ie $\delta_j(x_j)=1$
+**Intuition**: At $\delta_j(x_j)$ both top and bottom are the same.. I.e., $\delta_j(x_j)=1$
 
 We want to find $f(x_0) == y_0$
 
 $\delta_j(x_i)$ is the polynomial.
 
-**Additional context:**
+**Additional context**:
 
 **Q1.** What fixes the secret it not the x_i shares, but the function. IE y_i values.
 
