@@ -15,6 +15,33 @@ SHARE_4 = int(
 # N = 5, k = 3
 SHARES = [(1, SHARE_1), (2, SHARE_2), (4, SHARE_4)]
 
+#Field operations (to be used in conjunction with pow() for exponentiation)
+def F_add(a, b) -> int:
+    """
+    Add two numbers in the field.
+    :param a: First number.
+    :param b: Second number.
+    :return: a + b.
+    """
+    return (a + b) % F
+
+def F_sub(a, b) -> int:
+    """
+    Subtract two numbers in the field.
+    :param a: First number.
+    :param b: Second number.
+    :return: a - b.
+    """
+    return (a - b) % F
+
+def F_mul(a, b) -> int:
+    """
+    Multiply two numbers in the field.
+    :param a: First number.
+    :param b: Second number.
+    :return: a * b.
+    """
+    return (a * b) % F
 
 def split_secret(N, k) -> []:
     """
