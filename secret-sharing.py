@@ -62,11 +62,12 @@ def split_secret(N, k) -> []:
     pass
 
 
-def reconstruct(shares: [], degree) -> int:
+def reconstruct(shares: [], degree, x) -> int:
     """
     Reconstruct the polynomial from.
     :param shares: List of shares. **Shares**: (i, f(i)). **Invariance**: 1. Len(shares) >= degree + 1, 2. i is unique, 3. f(i) \in F.
     :param degree: The degree of the polynomial.
+    :param x: The x value to evaluate the polynomial at.
     :return: F(0) - The secret.
     """
     k = degree + 1
@@ -84,7 +85,7 @@ def reconstruct(shares: [], degree) -> int:
             if i == j:
                 continue
             x_j, _ = shares[j]
-            y_i = F_mul(F_div(F_sub(0, x_j), F_sub(x_i, x_j)), y_i)
+            y_i = F_mul(F_div(F_sub(x, x_j), F_sub(x_i, x_j)), y_i)
 
         y_i = F_mul(y_i, f_i)
         secret = F_add(secret, y_i)
