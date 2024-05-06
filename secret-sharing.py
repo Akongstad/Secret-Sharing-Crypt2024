@@ -43,6 +43,15 @@ def F_mul(a, b) -> int:
     """
     return (a * b) % F
 
+def F_div(a, b) -> int:
+    """
+    Divide two numbers in the field.
+    :param a: First number.
+    :param b: Second number.
+    :return: a / b.
+    """
+    return F_mul(a, pow(b, -1, F))
+
 def split_secret(N, k) -> []:
     """
     Split the secret N shares with the polynomial definition from the lecture
@@ -60,7 +69,29 @@ def reconstruct(shares: [], degree) -> int:
     :param degree: The degree of the polynomial.
     :return: F(0) - The secret.
     """
-    pass
+    k = degree + 1
+
+    if len(shares) < k:
+        raise ValueError("Not enough shares to reconstruct the polynomial.")
+    
+    # Lagrange interpolation for x = 0
+    secret = 0 
+
+    for i in range(k): # Summation
+        x_i, f_i = shares[i] 
+        y_i = 1
+        for j in range(k): # Product 
+            if i == j:
+                continue
+            x_j, _ = shares[j]
+            y_i = F_mul(F_div(F_sub(0, x_j), F_sub(x_i, x_j)), y_i)
+
+        y_i = F_mul(y_i, f_i)
+        secret = F_add(secret, y_i)
+    
+    return secret
+
+    
 
 
 if __name__ == '__main__':
