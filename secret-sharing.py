@@ -1,3 +1,5 @@
+import secrets
+
 # CONSTS
 F_HEX = "0x00b44a0bc6303782b729a7f9b44a3611b247ddf1e544f8b1420e2aae976003219175461d2bd76e64ba657d7c9dff6ed7b17980778ec0cbf75fc16e52463e2d784f5f20c1691f17cdc597d7a5141080809a38c635b2a62082e310aa963ca15953894221ad54c6b30aea10f4dd88a66c55ab9c413eae49c0b28e6a3981e0021a7dcb0759af34b095ce3efce78938f2a2bed70939ba47591b88f908db1eadf237a7a7100ac87130b6119d7ae41b35fd27ff6021ac928273c20f0b3a01df1e6a070b8e2e93b5220ad02104000c0c1e82e17fd00f6ac16ef37c3b6153d348e470843a84f25473a51f040a42671cd94ffc989eb27fd42b817f8173bfa95bdfa17a2ae22fd5c89dab2822bcc973b5b90f8fadc9b074cca8f9365b1e8994ff0bda48b1f7498cce02d4e794915f8a4208de3eaf9fbff5"
 F = int(F_HEX, 16)
@@ -15,7 +17,8 @@ SHARE_4 = int(
 # N = 5, k = 3
 SHARES = [(1, SHARE_1), (2, SHARE_2), (4, SHARE_4)]
 
-#Field operations (to be used in conjunction with pow() for exponentiation)
+
+# Field operations (to be used in conjunction with pow() for exponentiation)
 def F_add(a, b) -> int:
     """
     Add two numbers in the field.
@@ -24,6 +27,7 @@ def F_add(a, b) -> int:
     :return: a + b.
     """
     return (a + b) % F
+
 
 def F_sub(a, b) -> int:
     """
@@ -34,6 +38,7 @@ def F_sub(a, b) -> int:
     """
     return (a - b) % F
 
+
 def F_mul(a, b) -> int:
     """
     Multiply two numbers in the field.
@@ -42,6 +47,7 @@ def F_mul(a, b) -> int:
     :return: a * b.
     """
     return (a * b) % F
+
 
 def F_div(a, b) -> int:
     """
@@ -52,14 +58,27 @@ def F_div(a, b) -> int:
     """
     return F_mul(a, pow(b, -1, F))
 
-def split_secret(N, k) -> []:
+
+def sample_coefficients(k) -> []:
+    """sample k coefficients from F. (Use secrets for cryptographically secure random numbers.)"""
+    for i in range(k):
+        yield secrets.randbelow(F)
+
+
+def split_secret(S, N, k) -> []:
     """
-    Split the secret N shares with the polynomial definition from the lecture
+    Split the secret S into N shares with the polynomial definition from the lecture
     :param N: # of shares to split into.
     :param k: # shares for reconstruction. deg(f) = k - 1.
     :return: List of N shares with k needed for reconstruction. Share: (i, f(i)).
     """
-    pass
+    as_ = list(sample_coefficients(k))  # Random coeefficients.
+
+    def f(x):  # Polynomial definition of the form:  f(x) = Sx^0+a_1x + a_2x^2+…a_t x^y
+        return sum([S] + [F_mul(a, pow(x, i + 1, F)) for i, a in enumerate(as_)]) % F
+
+    shares = [(i, f(i)) for i in range(1, N + 1)]  # (1, f(1)), ..., (N, f(N))
+    return shares
 
 
 def reconstruct(shares: [], degree, x) -> int:
@@ -74,14 +93,13 @@ def reconstruct(shares: [], degree, x) -> int:
 
     if len(shares) < k:
         raise ValueError("Not enough shares to reconstruct the polynomial.")
-    
-    # Lagrange interpolation for x = 0
-    secret = 0 
 
-    for i in range(k): # Summation
-        x_i, f_i = shares[i] 
+    secret = 0
+
+    for i in range(k):  # Summation
+        x_i, f_i = shares[i]
         y_i = 1
-        for j in range(k): # Product 
+        for j in range(k):  # Product
             if i == j:
                 continue
             x_j, _ = shares[j]
@@ -89,13 +107,22 @@ def reconstruct(shares: [], degree, x) -> int:
 
         y_i = F_mul(y_i, f_i)
         secret = F_add(secret, y_i)
-    
-    return secret
 
-    
+    return secret
 
 
 if __name__ == '__main__':
-    # Shares
-    pass
+    # Assertions
+    # Field operations
+    assert F_add(1, 2) == 3
+    assert F_sub(1, 2) == F - 1
+    assert F_mul(2, 3) == 6
 
+    # Split secret
+    shares = split_secret(42, 5, 3)
+    assert len(shares) == 5  # split_secret return N shares.
+    assert all([1 <= i <= 5 for i, _ in shares])  # Shares are deterministic and in range
+    assert all([a <= F for a in sample_coefficients(5)])  # Random coefficients are in range.
+
+    # Reconstruct secret
+    assert reconstruct(shares, 2, 0) == 42 # Reconstruct the secret from the shares.
