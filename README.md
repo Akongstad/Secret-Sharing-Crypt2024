@@ -1,5 +1,6 @@
 
-### Running the 
+### Running the Project
+
 
 ### **Shamir Secret Sharing**
 
