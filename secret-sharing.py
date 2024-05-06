@@ -145,4 +145,3 @@ if __name__ == '__main__':
     plt.xlabel("x")
     plt.ylabel("f(x)")
     plt.show()
-
