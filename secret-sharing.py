@@ -1,4 +1,5 @@
 import secrets
+import matplotlib.pyplot as plt
 
 # CONSTS
 F_HEX = "0x00b44a0bc6303782b729a7f9b44a3611b247ddf1e544f8b1420e2aae976003219175461d2bd76e64ba657d7c9dff6ed7b17980778ec0cbf75fc16e52463e2d784f5f20c1691f17cdc597d7a5141080809a38c635b2a62082e310aa963ca15953894221ad54c6b30aea10f4dd88a66c55ab9c413eae49c0b28e6a3981e0021a7dcb0759af34b095ce3efce78938f2a2bed70939ba47591b88f908db1eadf237a7a7100ac87130b6119d7ae41b35fd27ff6021ac928273c20f0b3a01df1e6a070b8e2e93b5220ad02104000c0c1e82e17fd00f6ac16ef37c3b6153d348e470843a84f25473a51f040a42671cd94ffc989eb27fd42b817f8173bfa95bdfa17a2ae22fd5c89dab2822bcc973b5b90f8fadc9b074cca8f9365b1e8994ff0bda48b1f7498cce02d4e794915f8a4208de3eaf9fbff5"
@@ -19,7 +20,7 @@ SHARES = [(1, SHARE_1), (2, SHARE_2), (4, SHARE_4)]
 
 
 # Field operations (to be used in conjunction with pow() for exponentiation)
-def F_add(a, b) -> int:
+def F_add(a, b, F=F) -> int:
     """
     Add two numbers in the field.
     :param a: First number.
@@ -29,7 +30,7 @@ def F_add(a, b) -> int:
     return (a + b) % F
 
 
-def F_sub(a, b) -> int:
+def F_sub(a, b, F=F) -> int:
     """
     Subtract two numbers in the field.
     :param a: First number.
@@ -39,7 +40,7 @@ def F_sub(a, b) -> int:
     return (a - b) % F
 
 
-def F_mul(a, b) -> int:
+def F_mul(a, b, F=F) -> int:
     """
     Multiply two numbers in the field.
     :param a: First number.
@@ -49,7 +50,7 @@ def F_mul(a, b) -> int:
     return (a * b) % F
 
 
-def F_div(a, b) -> int:
+def F_div(a, b, F=F) -> int:
     """
     Divide two numbers in the field.
     :param a: First number.
@@ -59,29 +60,32 @@ def F_div(a, b) -> int:
     return F_mul(a, pow(b, -1, F))
 
 
-def sample_coefficients(k) -> []:
+def sample_coefficients(k, F=F) -> []:
     """sample k coefficients from F. (Use secrets for cryptographically secure random numbers.)"""
     for i in range(k):
-        yield secrets.randbelow(F)
+        yield secrets.randbelow(F)  # Q: Can these be < 0?
 
 
-def split_secret(S, N, k) -> []:
+def split_secret(S, N, k, F=F) -> []:
     """
     Split the secret S into N shares with the polynomial definition from the lecture
     :param N: # of shares to split into.
     :param k: # shares for reconstruction. deg(f) = k - 1.
     :return: List of N shares with k needed for reconstruction. Share: (i, f(i)).
     """
-    as_ = list(sample_coefficients(k))  # Random coeefficients.
+    as_ = [S] + list(sample_coefficients(k - 1, F))  # Random coefficients.
 
-    def f(x):  # Polynomial definition of the form:  f(x) = Sx^0+a_1x + a_2x^2+…a_t x^y
-        return sum([S] + [F_mul(a, pow(x, i + 1, F)) for i, a in enumerate(as_)]) % F
+    def f_(x):  # Polynomial definition of the form:  f(x) = S + a_1x + a_2x^2 + ... + a_k x^k
+        res = 0
+        for i, a in enumerate(as_):
+            res = F_add(res, F_mul(a, pow(x, i, F), F), F)
+        return res
 
-    shares = [(i, f(i)) for i in range(1, N + 1)]  # (1, f(1)), ..., (N, f(N))
+    shares = [(i, f_(i)) for i in range(1, N + 1)]  # (1, f(1)), ..., (N, f(N))
     return shares
 
 
-def reconstruct(shares: [], degree, x) -> int:
+def reconstruct(shares: [], degree, x, F=F) -> int:
     """
     Reconstruct the polynomial from.
     :param shares: List of shares. **Shares**: (i, f(i)). **Invariance**: 1. Len(shares) >= degree + 1, 2. i is unique, 3. f(i) \in F.
@@ -103,15 +107,15 @@ def reconstruct(shares: [], degree, x) -> int:
             if i == j:
                 continue
             x_j, _ = shares[j]
-            y_i = F_mul(F_div(F_sub(x, x_j), F_sub(x_i, x_j)), y_i)
+            y_i = F_mul(F_div(F_sub(x, x_j, F), F_sub(x_i, x_j, F), F), y_i, F)
 
-        y_i = F_mul(y_i, f_i)
-        secret = F_add(secret, y_i)
+        y_i = F_mul(y_i, f_i, F)
+        secret = F_add(secret, y_i, F)
 
     return secret
 
 
-if __name__ == '__main__':
+def test():
     # Assertions
     # Field operations
     assert F_add(1, 2) == 3
@@ -125,4 +129,20 @@ if __name__ == '__main__':
     assert all([a <= F for a in sample_coefficients(5)])  # Random coefficients are in range.
 
     # Reconstruct secret
-    assert reconstruct(shares, 2, 0) == 42 # Reconstruct the secret from the shares.
+    assert reconstruct(shares[:3], 2, 0) == 42  # Reconstruct the secret from the shares.
+
+
+if __name__ == '__main__':
+    test()
+
+    S = 42
+    shares = split_secret(S, 5, 3, 101)
+    assert reconstruct(shares[:5], 2, 0, 101) == S
+    print(shares)
+
+    # Plot the shares as points.
+    plt.scatter([0] + [i for i, _ in shares], [S] + [f for _, f in shares])
+    plt.xlabel("x")
+    plt.ylabel("f(x)")
+    plt.show()
+
