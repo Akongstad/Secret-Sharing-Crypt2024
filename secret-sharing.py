@@ -1,3 +1,10 @@
+#File is written for Python 3
+#The code uses matplotlib library for plotting the shares as points, so make sure to have it installed.
+#To run the code, use cli and type: "python3 .\secret-sharing.py"
+#The code is tested and are assumed to be working as expected.
+#See comments in the code for more information.
+#The file opens with constants and field operations, then the split_secret function, reconstruct function and test function.
+
 import secrets
 import matplotlib.pyplot as plt
 
@@ -100,19 +107,20 @@ def reconstruct(shares: [], degree, x, F=F) -> int:
 
     secret = 0
 
-    for i in range(k):  # Summation
+    # Lagrange interpolation
+    for i in range(k): 
         x_i, f_i = shares[i]
         y_i = 1
-        for j in range(k):  # Product
+        for j in range(k):  
             if i == j:
                 continue
             x_j, _ = shares[j]
             y_i = F_mul(F_div(F_sub(x, x_j, F), F_sub(x_i, x_j, F), F), y_i, F)
 
         y_i = F_mul(y_i, f_i, F)
-        secret = F_add(secret, y_i, F)
+        secret = F_add(secret, y_i, F) 
 
-    return secret
+    return secret 
 
 
 def test():
