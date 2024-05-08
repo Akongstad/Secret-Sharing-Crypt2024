@@ -117,10 +117,10 @@ def reconstruct(shares: [], degree, x, F=F) -> int:
     secret = 0
 
     # Lagrange interpolation
-    for i in range(k):
+    for i in range(k): # P(x) = sum(f_i * y_i), where y_i = prod((x - x_j) / (x_i - x_j)), j != i
         x_i, f_i = shares[i]
         y_i = 1
-        for j in range(k):
+        for j in range(k): # Compute y_i
             if i == j:
                 continue
             x_j, _ = shares[j]
