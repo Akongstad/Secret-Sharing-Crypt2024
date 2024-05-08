@@ -130,7 +130,11 @@ def test():
 
     # Reconstruct secret
     assert reconstruct(shares[:3], 2, 0) == 42  # Reconstruct the secret from the shares.
-
+    assert reconstruct(SHARES, 2, 1) == SHARE_1  # Reconstruct the secret from the shares.
+    
+    #Check we can reconstruct SHARE_4 using constructed SHARE_0 with SHARE_1 and SHARE_2
+    assert reconstruct([(0, reconstruct(SHARES, 2, 0)), (1, SHARE_1), (2, SHARE_2)], 2, 4) == SHARE_4
+    
 
 if __name__ == '__main__':
     test()
@@ -145,3 +149,6 @@ if __name__ == '__main__':
     plt.xlabel("x")
     plt.ylabel("f(x)")
     plt.show()
+
+    share_0 = reconstruct(SHARES, 2, 0)
+    print("The reconstructed secret is: ", hex(share_0)[2:])
